@@ -10,6 +10,7 @@ import com.mitchellbosecke.pebble.template.PebbleTemplate
 import com.mitchellbosecke.pebble.PebbleEngine
 import org.openapitools.codegen.api.AbstractTemplatingEngineAdapter
 import java.io.File
+import java.nio.file.Files
 
 class PebbleTemplateEngineAdapter : AbstractTemplatingEngineAdapter() {
     private val tempDir: File by lazy {
@@ -44,10 +45,9 @@ class PebbleTemplateEngineAdapter : AbstractTemplatingEngineAdapter() {
     ): String {
         val modifiedTemplate = this.getModifiedFileLocation(templateFile).first()
         println(modifiedTemplate)
-        val file = createTempFile("tmp-$modifiedTemplate", directory = tempDir)
+        val file = createTempFile(modifiedTemplate, directory = tempDir)
         val contents = generator?.getFullTemplateContents(modifiedTemplate)?:""
         file.writeText(contents)
-        println(contents)
         file.deleteOnExit()
         val compiledTemplate: PebbleTemplate? = engine.getTemplate(file.absolutePath)
         val writer = StringWriter()
