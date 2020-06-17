@@ -15,8 +15,8 @@ repositories {
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    compile "org.openapitools:openapi-generator-core:4.0.0-SNAPSHOT"
-    compile "io.pebbletemplates:pebble:3.0.8"
+    compile "org.openapitools:openapi-generator-core:4.3.1"
+    compile "io.pebbletemplates:pebble:3.1.1"
 }
 
 compileKotlin {

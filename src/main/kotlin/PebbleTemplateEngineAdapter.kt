@@ -1,33 +1,26 @@
 @file:JvmName("PebbleTemplateEngineAdapter")
 package us.jimschubert.examples.engines
 
-import org.openapitools.codegen.api.TemplatingEngineAdapter
 import org.openapitools.codegen.api.TemplatingGenerator
 import java.io.StringWriter
-import java.io.Writer
-import java.util.HashMap
-import com.mitchellbosecke.pebble.template.PebbleTemplate
 import com.mitchellbosecke.pebble.PebbleEngine
+import com.mitchellbosecke.pebble.loader.ClasspathLoader
+import com.mitchellbosecke.pebble.loader.DelegatingLoader
+import com.mitchellbosecke.pebble.loader.FileLoader
 import org.openapitools.codegen.api.AbstractTemplatingEngineAdapter
-import java.io.File
-import java.nio.file.Files
 
 class PebbleTemplateEngineAdapter : AbstractTemplatingEngineAdapter() {
-    private val tempDir: File by lazy {
-        val d = createTempDir("pebble-template-engine-adapter")
-        d.deleteOnExit()
-        d
-    }
-    private val engine: PebbleEngine = PebbleEngine.Builder().cacheActive(false).build()
+    private val engine: PebbleEngine = PebbleEngine.Builder()
+        .cacheActive(false)
+        .loader(DelegatingLoader(listOf(FileLoader(), ClasspathLoader())))
+        .build()
 
     /**
      * Provides an identifier used to load the adapter. This could be a name, uuid, or any other string.
      *
      * @return A string identifier.
      */
-    override fun getIdentifier(): String {
-        return "pebble"
-    }
+    override fun getIdentifier(): String = "pebble"
 
     /**
      * Compiles a template into a string
@@ -44,17 +37,11 @@ class PebbleTemplateEngineAdapter : AbstractTemplatingEngineAdapter() {
         templateFile: String?
     ): String {
         val modifiedTemplate = this.getModifiedFileLocation(templateFile).first()
-        println(modifiedTemplate)
-        val file = createTempFile(modifiedTemplate, directory = tempDir)
-        val contents = generator?.getFullTemplateContents(modifiedTemplate)?:""
-        file.writeText(contents)
-        file.deleteOnExit()
-        val compiledTemplate: PebbleTemplate? = engine.getTemplate(file.absolutePath)
-        val writer = StringWriter()
-        compiledTemplate?.evaluate(writer, bundle)
+        val filePath = generator?.getFullTemplatePath(modifiedTemplate)
 
-        val output = writer.toString()
-        return output
+        val writer = StringWriter()
+        engine.getTemplate(filePath?.toAbsolutePath().toString())?.evaluate(writer, bundle)
+        return writer.toString()
     }
 
     /**
@@ -63,7 +50,5 @@ class PebbleTemplateEngineAdapter : AbstractTemplatingEngineAdapter() {
      * and we use the templating engine adapter to generate it
      * @return string array of the valid file extensions for this templating engine
      */
-    override fun getFileExtensions(): Array<String> {
-        return arrayOf("pebble")
-    }
+    override fun getFileExtensions(): Array<String> = arrayOf("pebble")
 }
